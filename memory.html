@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>1 Minute Memory Challenge</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 32px;
+}
+
+#sequence {
+    font-size: 40px;
+    letter-spacing: 8px;
+    margin: 30px;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    margin: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#startBtn { background-color: #22c55e; color: white; }
+#submitBtn { background-color: #3b82f6; color: white; display:none; }
+
+input {
+    padding: 10px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 6px;
+    border: none;
+    margin-top: 10px;
+    display: none;
+}
+
+#timer {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+}
+</style>
+</head>
+<body>
+
+<h1>1 Minute Memory Challenge</h1>
+<p id="timer">Time: 60</p>
+<div id="sequence"></div>
+
+<input type="text" id="userInput">
+<br>
+<button id="startBtn">Start</button>
+<button id="submitBtn">Submit</button>
+
+<p id="result"></p>
+
+<script>
+let timeLeft = 60;
+let score = 0;
+let level = 3;
+let sequence = "";
+let timerInterval;
+
+const sequenceDisplay = document.getElementById("sequence");
+const userInput = document.getElementById("userInput");
+const startBtn = document.getElementById("startBtn");
+const submitBtn = document.getElementById("submitBtn");
+const timerDisplay = document.getElementById("timer");
+const resultDisplay = document.getElementById("result");
+
+function playSound(type) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = type === "correct" ? 700 : 200;
+    oscillator.type = "sine";
+    oscillator.start();
+
+    gainNode.gain.exponentialRampToValueAtTime(
+        0.00001,
+        audioCtx.currentTime + 0.3
+    );
+
+    oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
+startBtn.addEventListener("click", startGame);
+submitBtn.addEventListener("click", checkAnswer);
+
+function startGame() {
+    timeLeft = 60;
+    score = 0;
+    level = 3;
+    resultDisplay.textContent = "";
+    startBtn.style.display = "none";
+    submitBtn.style.display = "inline-block";
+    userInput.style.display = "inline-block";
+    userInput.focus();
+
+    nextRound();
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = "Time: " + timeLeft;
+        if (timeLeft <= 0) endGame();
+    }, 1000);
+}
+
+function generateSequence(length) {
+    let seq = "";
+    for (let i = 0; i < length; i++) {
+        seq += Math.floor(Math.random() * 10);
+    }
+    return seq;
+}
+
+function nextRound() {
+    sequence = generateSequence(level);
+    sequenceDisplay.textContent = sequence;
+
+    setTimeout(() => {
+        sequenceDisplay.textContent = "???";
+        userInput.value = "";
+        userInput.focus();
+    }, 2000);
+}
+
+function checkAnswer() {
+    if (userInput.value === sequence) {
+        score++;
+        level++;
+        playSound("correct");
+        nextRound();
+    } else {
+        playSound("wrong");
+        level = 3;
+        nextRound();
+    }
+}
+
+function endGame() {
+    clearInterval(timerInterval);
+    sequenceDisplay.textContent = "Time's Up!";
+    submitBtn.style.display = "none";
+    userInput.style.display = "none";
+
+    resultDisplay.innerHTML =
+        "<strong>Your Score:</strong> " + score + "<br>" +
+        "Highest Level Reached: " + level;
+
+    startBtn.textContent = "Play Again";
+    startBtn.style.display = "inline-block";
+}
+</script>
+
+</body>
+</html>
