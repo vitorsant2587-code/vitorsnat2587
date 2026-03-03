@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>1 Minute Reaction Speed Test</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 32px;
+}
+
+#gameBox {
+    width: 300px;
+    height: 300px;
+    margin: 30px auto;
+    background-color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    margin: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#startBtn {
+    background-color: #22c55e;
+    color: white;
+}
+
+#timer {
+    font-size: 20px;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+a button {
+    background-color: #f59e0b;
+    color: black;
+}
+</style>
+</head>
+
+<body>
+
+<h1>1 Minute Reaction Speed Test</h1>
+
+<p id="timer">Time: 60</p>
+
+<div id="gameBox">Click Start</div>
+
+<button id="startBtn">Start</button>
+
+<p id="result"></p>
+
+<br><br>
+
+<a href="index.html">
+    <button>Back to Math Game</button>
+</a>
+
+<script>
+let timeLeft = 60;
+let score = 0;
+let bestTime = null;
+let timerInterval;
+let startTime;
+let waiting = false;
+
+const gameBox = document.getElementById("gameBox");
+const startBtn = document.getElementById("startBtn");
+const timerDisplay = document.getElementById("timer");
+const resultDisplay = document.getElementById("result");
+
+function playSound(type) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = type === "correct" ? 800 : 200;
+    oscillator.type = "sine";
+    oscillator.start();
+
+    gainNode.gain.exponentialRampToValueAtTime(
+        0.00001,
+        audioCtx.currentTime + 0.3
+    );
+
+    oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
+startBtn.addEventListener("click", startGame);
+gameBox.addEventListener("click", handleClick);
+
+function startGame() {
+    timeLeft = 60;
+    score = 0;
+    bestTime = null;
+    resultDisplay.textContent = "";
+    startBtn.style.display = "none";
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = "Time: " + timeLeft;
+        if (timeLeft <= 0) endGame();
+    }, 1000);
+
+    nextRound();
+}
+
+function nextRound() {
+    waiting = false;
+    gameBox.style.backgroundColor = "#dc2626";
+    gameBox.textContent = "Wait for green...";
+
+    const delay = Math.random() * 3000 + 1000;
+
+    setTimeout(() => {
+        gameBox.style.backgroundColor = "#16a34a";
+        gameBox.textContent = "CLICK!";
+        startTime = Date.now();
+        waiting = true;
+    }, delay);
+}
+
+function handleClick() {
+    if (!waiting) {
+        playSound("wrong");
+        gameBox.textContent = "Too Early!";
+        return;
+    }
+
+    const reactionTime = Date.now() - startTime;
+    score++;
+    playSound("correct");
+
+    if (bestTime === null || reactionTime < bestTime) {
+        bestTime = reactionTime;
+    }
+
+    resultDisplay.innerHTML =
+        "Last Reaction: " + reactionTime + " ms<br>" +
+        "Best Reaction: " + bestTime + " ms<br>" +
+        "Total Hits: " + score;
+
+    nextRound();
+}
+
+function endGame() {
+    clearInterval(timerInterval);
+    gameBox.textContent = "Time's Up!";
+    gameBox.style.backgroundColor = "#374151";
+    startBtn.textContent = "Play Again";
+    startBtn.style.display = "inline-block";
+}
+</script>
+
+</body>
+</html>
