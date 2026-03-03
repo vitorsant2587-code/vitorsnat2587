@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>1 Minute Brain Math</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 32px;
+}
+
+#question {
+    font-size: 40px;
+    margin: 20px;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    margin: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#startBtn {
+    background-color: #22c55e;
+    color: white;
+}
+
+#submitBtn {
+    background-color: #3b82f6;
+    color: white;
+    display: none;
+}
+
+input {
+    padding: 10px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 6px;
+    border: none;
+    margin-top: 10px;
+    display: none;
+}
+
+#timer {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+a button {
+    background-color: #f59e0b;
+    color: black;
+}
+</style>
+</head>
+
+<body>
+
+<h1>1 Minute Brain Math</h1>
+
+<p id="timer">Time: 60</p>
+
+<div id="question"></div>
+
+<input type="number" id="answer">
+
+<br>
+
+<button id="startBtn">Start</button>
+<button id="submitBtn">Submit</button>
+
+<p id="result"></p>
+
+<br><br>
+
+<a href="memory.html">
+    <button>Play Memory Challenge</button>
+</a>
+
+<script>
+let timeLeft = 60;
+let score = 0;
+let currentAnswer;
+let timerInterval;
+
+const timerDisplay = document.getElementById("timer");
+const questionDisplay = document.getElementById("question");
+const answerInput = document.getElementById("answer");
+const startBtn = document.getElementById("startBtn");
+const submitBtn = document.getElementById("submitBtn");
+const resultDisplay = document.getElementById("result");
+
+function playSound(type) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = type === "correct" ? 600 : 200;
+    oscillator.type = "sine";
+    oscillator.start();
+
+    gainNode.gain.exponentialRampToValueAtTime(
+        0.00001,
+        audioCtx.currentTime + 0.3
+    );
+
+    oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
+startBtn.addEventListener("click", startGame);
+submitBtn.addEventListener("click", checkAnswer);
+
+function startGame() {
+    timeLeft = 60;
+    score = 0;
+    resultDisplay.textContent = "";
+    startBtn.style.display = "none";
+    submitBtn.style.display = "inline-block";
+    answerInput.style.display = "inline-block";
+    answerInput.focus();
+
+    generateQuestion();
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = "Time: " + timeLeft;
+
+        if (timeLeft <= 0) {
+            endGame();
+        }
+    }, 1000);
+}
+
+function generateQuestion() {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    const operators = ["+", "-", "*"];
+    const operator = operators[Math.floor(Math.random() * operators.length)];
+
+    if (operator === "+") currentAnswer = num1 + num2;
+    if (operator === "-") currentAnswer = num1 - num2;
+    if (operator === "*") currentAnswer = num1 * num2;
+
+    questionDisplay.textContent = num1 + " " + operator + " " + num2;
+}
+
+function checkAnswer() {
+    if (parseInt(answerInput.value) === currentAnswer) {
+        score++;
+        playSound("correct");
+    } else {
+        playSound("wrong");
+    }
+
+    answerInput.value = "";
+    generateQuestion();
+}
+
+function endGame() {
+    clearInterval(timerInterval);
+    questionDisplay.textContent = "Time's Up!";
+    submitBtn.style.display = "none";
+    answerInput.style.display = "none";
+
+    resultDisplay.innerHTML =
+        "<strong>Your Score:</strong> " + score;
+
+    startBtn.textContent = "Play Again";
+    startBtn.style.display = "inline-block";
+}
+</script>
+
+</body>
+</html>
